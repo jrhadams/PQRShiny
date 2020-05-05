@@ -41,9 +41,9 @@ ui <- fluidPage(
 server <- function(input, output) {
 
     output$distPlot <- renderPlot({
-        #Get your distributon
-#        x<- sort(dbeta(shape1=input$shape1,shape2=input$shape2,x=1:10000))
+        #Get your data
         x<- sort(rbeta(10000,input$shape1,input$shape2))
+        #Get your density
         y<- dbeta(x,shape1=input$shape1,shape2=input$shape2)
         library(ggplot2)
         ggplot(data.frame(x,y),aes(x,y))+geom_line(color='red',alpha=0.8,size=1.5)+
