@@ -32,14 +32,15 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+           plotOutput("distPlot"),
+           plotOutput("cumplot")
         )
     )
 )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
-
+server <- function(input, output){
+    set.seed(1234)
     output$distPlot <- renderPlot({
         #Get your data
         x<- sort(rbeta(10000,input$shape1,input$shape2))
@@ -48,6 +49,16 @@ server <- function(input, output) {
         library(ggplot2)
         ggplot(data.frame(x,y),aes(x,y))+geom_line(color='red',alpha=0.8,size=1.5)+
             theme_minimal()+xlab('Quantile')+ylab('Density')
+    })
+    
+    output$cumplot <- renderPlot({
+      #Get your data
+      x<- seq(0.01,0.99,length.out = 10000)
+      #Get your density
+      y<- pbeta(x,shape1=input$shape1,shape2=input$shape2)
+      library(ggplot2)
+      ggplot(data.frame(x,y),aes(x,y))+geom_line(color='blue',alpha=0.8,size=1.5)+
+        theme_minimal()+xlab('Quantile')+ylab('Cumulative Probability')
     })
 }
 
