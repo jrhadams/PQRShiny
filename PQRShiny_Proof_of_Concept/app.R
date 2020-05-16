@@ -27,7 +27,14 @@ ui <- fluidPage(
                         "b :",
                         min = 1,
                         max = 20,
-                        value = 2)
+                        value = 2),
+            numericInput("x",
+                         "x :",
+                         min=0,max=1,
+                         value=0.5),
+            selectInput("prob_choice",
+                        "Probability",
+                        choices=list("P(X<x)"="x<input$x","P(X>x)"="x>input$x"))
         ),
 
         # Show a plot of the generated distribution
@@ -46,8 +53,13 @@ server <- function(input, output){
         x<- sort(rbeta(10000,input$shape1,input$shape2))
         #Get your density
         y<- dbeta(x,shape1=input$shape1,shape2=input$shape2)
+        dat<-data.frame(x,y)
+      
+        library(dplyr)
+        sub_dat<-dat%>%filter(eval(parse(text = input$prob_choice)))
         library(ggplot2)
         ggplot(data.frame(x,y),aes(x,y))+geom_line(color='red',alpha=0.8,size=1.5)+
+            geom_ribbon(data=sub_dat,aes(ymax=y),ymin=0,fill='red',alpha=0.3)+
             theme_minimal()+xlab('Quantile')+ylab('Density')
     })
     
@@ -56,8 +68,12 @@ server <- function(input, output){
       x<- seq(0.01,0.99,length.out = 10000)
       #Get your density
       y<- pbeta(x,shape1=input$shape1,shape2=input$shape2)
+      dat<-data.frame(x,y)
+      library(dplyr)
+      sub_dat<-dat%>%filter(eval(parse(text = input$prob_choice)))
       library(ggplot2)
       ggplot(data.frame(x,y),aes(x,y))+geom_line(color='blue',alpha=0.8,size=1.5)+
+        geom_ribbon(data=sub_dat,aes(ymax=y),ymin=0,fill='blue',alpha=0.3)+
         theme_minimal()+xlab('Quantile')+ylab('Cumulative Probability')
     })
 }
