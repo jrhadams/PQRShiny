@@ -13,28 +13,30 @@ library(shiny)
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Beta Distribution Proof of Concept"),
+    titlePanel("Binomial Distribution Proof of Concept"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("shape1",
-                        "a :",
-                        min = 1,
-                        max = 20,
+            numericInput("size",
+                        "Size :",
                         value = 3),
-            sliderInput("shape2",
-                        "b :",
-                        min = 1,
-                        max = 20,
-                        value = 2),
+            sliderInput("prob",
+                        "Probability :",
+                        min = 0,
+                        max = 1,
+                        value = 0.5),
             numericInput("x",
                          "x :",
-                         min=0,max=1,
-                         value=0.5),
+                         min=0,max=6,
+                         value=1),
             selectInput("prob_choice",
                         "Probability",
-                        choices=list("P(X<x)"="x<input$x","P(X>x)"="x>input$x"))
+                        choices=list("P(X<x)"="x<input$x",
+                                     "P(X>x)"="x>input$x",
+                                     "P(X==x)"="x==input$x",
+                                     "P(X<=x)"="x<=input$x",
+                                     "P(X>=x)"="x>=input$x"))
         ),
 
         # Show a plot of the generated distribution
@@ -50,30 +52,35 @@ server <- function(input, output){
     set.seed(1234)
     output$distPlot <- renderPlot({
         #Get your data
-        x<- sort(rbeta(10000,input$shape1,input$shape2))
+        x<- sort(rbinom(n=10000,size=input$size,prob=input$prob))
         #Get your density
-        y<- dbeta(x,shape1=input$shape1,shape2=input$shape2)
-        dat<-data.frame(x,y)
+        y<- dbinom(x,size=input$size,prob=input$prob)
+        dat<-unique(data.frame(x,y))
       
         library(dplyr)
         sub_dat<-dat%>%filter(eval(parse(text = input$prob_choice)))
         library(ggplot2)
-        ggplot(data.frame(x,y),aes(x,y))+geom_line(color='red',alpha=0.8,size=1.5)+
-            geom_ribbon(data=sub_dat,aes(ymax=y),ymin=0,fill='red',alpha=0.3)+
-            theme_minimal()+xlab('Quantile')+ylab('Density')
+#        browser()
+        ggplot(data.frame(x,y),aes(x,y))+geom_point(size=2)+
+          geom_linerange(aes(xmin=0,xmax=x,ymin=0,ymax=y),color='red',alpha=0.8,size=1.5)+
+            theme_minimal()+xlab('Quantile')+ylab('Density')#+
+         # geom_vline(xintercept=input$x,lty='dashed',
+          #           color='#28df99',size=2)
     })
     
     output$cumplot <- renderPlot({
       #Get your data
-      x<- seq(0.01,0.99,length.out = 10000)
+#      x<- seq(,length.out = 10000)
+      x<- sort(rbinom(n=10000,size=input$size,prob=input$prob))
       #Get your density
-      y<- pbeta(x,shape1=input$shape1,shape2=input$shape2)
-      dat<-data.frame(x,y)
+      y<- pbinom(q=x,size=input$size,prob=input$prob)
+      dat<-unique(data.frame(x,y))
       library(dplyr)
       sub_dat<-dat%>%filter(eval(parse(text = input$prob_choice)))
       library(ggplot2)
-      ggplot(data.frame(x,y),aes(x,y))+geom_line(color='blue',alpha=0.8,size=1.5)+
-        geom_ribbon(data=sub_dat,aes(ymax=y),ymin=0,fill='blue',alpha=0.3)+
+      ggplot(data.frame(x,y),aes(x,y))+geom_point(color='black',alpha=0.8,size=2)+
+       geom_linerange(aes(xmin=0,xmax=x,ymin=0,ymax=y),color='blue',alpha=0.8,size=1.5)+
+        #geom_area(aes(x=ifelse(x==input$x,x,0)))+
         theme_minimal()+xlab('Quantile')+ylab('Cumulative Probability')
     })
 }
