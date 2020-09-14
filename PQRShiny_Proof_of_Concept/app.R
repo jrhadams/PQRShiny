@@ -13,29 +13,25 @@ library(shiny)
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Beta Distribution Proof of Concept"),
+    titlePanel("Normal Distribution Proof of Concept"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("shape1",
-                        "a :",
-                        min = 1,
-                        max = 20,
-                        value = 3),
-            sliderInput("shape2",
-                        "b :",
-                        min = 1,
-                        max = 20,
-                        value = 2),
+            numericInput("mean",
+                        "Mean :",
+                        value = 0),
+            numericInput("sd",
+                        "Standard Deviation :",
+                          value = 1),
             numericInput("x",
                          "x :",
-                         min=0,max=1,
                          value=0.5),
             selectInput("prob_choice",
-                        "Probability",
-                        choices=list("P(X<x)"="x<input$x","P(X>x)"="x>input$x"))
-        ),
+                        "Test",
+                        choices=list("P(X<x)"="x<input$x","P(X>x)"="x>input$x")),
+        htmlOutput('prob')
+            ),
 
         # Show a plot of the generated distribution
         mainPanel(
@@ -45,14 +41,16 @@ ui <- fluidPage(
     )
 )
 
+
+
 # Define server logic required to draw a histogram
 server <- function(input, output){
     set.seed(1234)
     output$distPlot <- renderPlot({
         #Get your data
-        x<- sort(rbeta(10000,input$shape1,input$shape2))
+        x<- sort(rnorm(10000,input$mean,input$sd))
         #Get your density
-        y<- dbeta(x,shape1=input$shape1,shape2=input$shape2)
+        y<- dnorm(x,mean=input$mean,sd=input$sd)
         dat<-data.frame(x,y)
       
         library(dplyr)
@@ -63,11 +61,22 @@ server <- function(input, output){
             theme_minimal()+xlab('Quantile')+ylab('Density')
     })
     
+    thresh<- reactive({
+      ifelse(is.null(input$x),0,input$x)
+    })
+    
+    output$prob<- renderText({
+      tl<- ifelse(input$prob_choice=='x<input$x',T,F)
+      HTML(paste0('<b>Probability:</b> ', round(pnorm(q=thresh(),mean=input$mean,sd=input$sd,
+                  lower.tail=tl),2)))
+    })
+    
     output$cumplot <- renderPlot({
       #Get your data
-      x<- seq(0.01,0.99,length.out = 10000)
+      x<- qnorm(mean=input$mean,sd=input$sd,
+                p=seq(0.01,0.99,length.out = 1000))
       #Get your density
-      y<- pbeta(x,shape1=input$shape1,shape2=input$shape2)
+      y<- pnorm(x,mean=input$mean,sd=input$sd)
       dat<-data.frame(x,y)
       library(dplyr)
       sub_dat<-dat%>%filter(eval(parse(text = input$prob_choice)))
