@@ -1,0 +1,15 @@
+.sticky_footer {
+  position:fixed;
+  bottom:0;
+  right:0;
+  left:0;
+  height:20px;
+  color:black;
+  background:#F4743B;
+  opacity:0.8;
+  margin:auto;
+  padding-bottom:10px;
+  z-index:1000;
+  text-align:center;
+}
+

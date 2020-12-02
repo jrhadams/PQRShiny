@@ -11,10 +11,10 @@ library(shiny)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
+    includeCSS("www/style.css"),
     # Application title
     titlePanel("Normal Distribution Proof of Concept"),
-
+ 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
@@ -38,7 +38,8 @@ ui <- fluidPage(
            plotOutput("distPlot"),
            plotOutput("cumplot")
         )
-    )
+    ),
+    div(class="sticky_footer",p('Enjoying this distribution?'))
 )
 
 
